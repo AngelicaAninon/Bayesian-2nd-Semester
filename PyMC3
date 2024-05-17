@@ -1,0 +1,35 @@
+#Angelica Aninon
+
+import numpy as np
+import pymc3 as pm
+import matplotlib.pyplot as plt
+# Generate some synthetic data
+np.random.seed(0)
+X = np.linspace(0, 10, 100)
+true_slope = 2
+true_intercept = 1
+true_sigma = 1
+Y = true_slope * X + true_intercept + np.random.normal(0, true_sigma, size=len(X))
+# Create the PyMC3 model
+with pm.Model() as model:
+# Priors
+slope = pm.Normal('slope', mu=0, sigma=10)
+intercept = pm.Normal('intercept', mu=0, sigma=10)
+sigma = pm.HalfNormal('sigma', sigma=1)
+# Expected value of outcome
+mu = slope * X + intercept
+# Likelihood (sampling distribution) of observations
+Y_obs = pm.Normal('Y_obs', mu=mu, sigma=sigma, observed=Y)
+# Sampling
+trace = pm.sample(1000, tune=1000)
+# Extracting the posterior distributions of parameters
+posterior_slope = trace['slope'].mean()
+posterior_intercept = trace['intercept'].mean()
+# Plot the results
+plt.scatter(X, Y, label='Data')
+plt.plot(X, true_slope*X + true_intercept, label='True Regression Line', color='green',
+linestyle='--')
+plt.plot(X, posterior_slope*X + posterior_intercept, label='Posterior Regression Line', color='red')
+plt.legend()
+plt.savefig('bayesian_regression_plot.png')
+plt.show()
